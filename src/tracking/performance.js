@@ -43,7 +43,6 @@ const PerformanceTracking = function (config) {
   let seekCount = 0;
   let pauseTime = 0;
   let pauseCount = 0;
-  let initPauseTime = 0;
 
   let bufferCount = 0;
   let totalDuration = 0;
@@ -55,11 +54,8 @@ const PerformanceTracking = function (config) {
   const reset = function () {
     session = v4();
     seekCount = 0;
-
     pauseTime = 0;
     pauseCount = 0;
-    initPauseTime = null;
-
     bufferCount = 0;
     bufferDuration = 0;
 
@@ -71,8 +67,8 @@ const PerformanceTracking = function (config) {
 
   const trigger = function () {
     const data = {
-      pauseCount,
       pauseTime,
+      pauseCount,
       seekCount,
       bufferCount,
       totalDuration,
@@ -110,7 +106,7 @@ const PerformanceTracking = function (config) {
     const curTime = +player.currentTime().toFixed(0);
     if (timestamps.indexOf(curTime) < 0) {
       timestamps.push(curTime);
-
+      // Update watched duration
       watchedDuration = timestamps.length;
       if (watchedDuration % triggerInterval === 0) {
         trigger();
@@ -120,18 +116,15 @@ const PerformanceTracking = function (config) {
   player.on("loadeddata", function (e, data) {
     totalDuration = +player.duration().toFixed(0);
   });
-  player.on("play", function () {
-    if (initPauseTime !== null) {
-      pauseTime += (Date.now() - initPauseTime) / 1000;
-      initPauseTime = null;
-    }
-  });
   player.on("tracking:seek", function (e, data) {
     seekCount = data.seekCount;
   });
   player.on("tracking:pause", function (e, data) {
     pauseCount = data.pauseCount;
-    initPauseTime = Date.now();
+  });
+  player.on("tracking:unpause", function (e, data) {
+    pauseTime = data.pauseTime;
+    pauseCount = data.pauseCount;
   });
   player.on("tracking:buffered", function (e, data) {
     ({ bufferCount } = data);
