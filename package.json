@@ -58,6 +58,7 @@
     "test/"
   ],
   "dependencies": {
+    "uuid": "^9.0.0",
     "video.js": ">=5.20.5"
   },
   "devDependencies": {
