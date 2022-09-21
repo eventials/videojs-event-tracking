@@ -23,25 +23,20 @@
  * @param    {Object} [config={}]
  *           An object of config left to the plugin author to define.
  */
-import { v4 } from "uuid";
+import { v4 } from 'uuid';
 
-const PerformanceTracking = function (config) {
+const PerformanceTracking = function(config) {
   if (
-    typeof config === "undefined" ||
-    typeof config.performance !== "function"
+    typeof config === 'undefined' ||
+    typeof config.performance !== 'function'
   ) {
     return;
   }
 
-  let triggerOnPause = true;
-  if (typeof config.triggerOnPause === "boolean") {
-    triggerOnPause = config.triggerOnPause;
-  }
-
-  let triggerInterval = 10;
-  if (typeof config.triggerInterval === "number") {
-    triggerInterval = config.triggerInterval;
-  }
+  const triggerOnPause =
+    typeof config.triggerOnPause === 'boolean' ? config.triggerOnPause : true;
+  const triggerInterval =
+    typeof config.triggerInterval === 'number' ? config.triggerInterval : 10;
 
   const player = this;
   let session = v4();
@@ -56,7 +51,7 @@ const PerformanceTracking = function (config) {
   let initialLoadTime = 0;
   let timestamps = [];
 
-  const reset = function () {
+  const reset = function() {
     session = v4();
     seekCount = 0;
     pauseTime = 0;
@@ -70,8 +65,9 @@ const PerformanceTracking = function (config) {
     initialLoadTime = 0;
   };
 
-  const trigger = function () {
+  const trigger = function() {
     const data = {
+      session,
       pauseTime,
       pauseCount,
       seekCount,
@@ -79,25 +75,25 @@ const PerformanceTracking = function (config) {
       totalDuration,
       watchedDuration,
       bufferDuration,
-      initialLoadTime,
+      initialLoadTime
     };
 
     config.performance.call(player, data);
   };
 
-  const triggerAndReset = function () {
+  const triggerAndReset = function() {
     trigger();
     reset();
   };
 
-  if (typeof window.addEventListener === "function") {
-    window.addEventListener("beforeunload", triggerAndReset);
-    player.on("dispose", function () {
-      window.removeEventListener("beforeunload", triggerAndReset);
+  if (typeof window.addEventListener === 'function') {
+    window.addEventListener('beforeunload', triggerAndReset);
+    player.on('dispose', function() {
+      window.removeEventListener('beforeunload', triggerAndReset);
     });
   }
 
-  player.on("loadstart", function () {
+  player.on('loadstart', function() {
     if (totalDuration > 0) {
       trigger();
     }
@@ -105,10 +101,11 @@ const PerformanceTracking = function (config) {
     reset();
   });
 
-  player.on("ended", triggerAndReset);
-  player.on("dispose", triggerAndReset);
-  player.on("timeupdate", function () {
+  player.on('ended', triggerAndReset);
+  player.on('dispose', triggerAndReset);
+  player.on('timeupdate', function() {
     const curTime = +player.currentTime().toFixed(0);
+
     if (timestamps.indexOf(curTime) < 0) {
       timestamps.push(curTime);
       // Update watched duration
@@ -118,27 +115,27 @@ const PerformanceTracking = function (config) {
       }
     }
   });
-  player.on("loadeddata", function (e, data) {
+  player.on('loadeddata', function(e, data) {
     totalDuration = +player.duration().toFixed(0);
   });
-  player.on("tracking:seek", function (e, data) {
+  player.on('tracking:seek', function(e, data) {
     seekCount = data.seekCount;
   });
-  player.on("tracking:pause", function (e, data) {
+  player.on('tracking:pause', function(e, data) {
     pauseCount = data.pauseCount;
     if (triggerOnPause) {
       trigger();
     }
   });
-  player.on("tracking:unpause", function (e, data) {
+  player.on('tracking:unpause', function(e, data) {
     pauseTime = data.pauseTime;
     pauseCount = data.pauseCount;
   });
-  player.on("tracking:buffered", function (e, data) {
+  player.on('tracking:buffered', function(e, data) {
     ({ bufferCount } = data);
     bufferDuration = +(bufferDuration + data.secondsToLoad).toFixed(3);
   });
-  player.on("tracking:firstplay", function (e, data) {
+  player.on('tracking:firstplay', function(e, data) {
     initialLoadTime = data.secondsToLoad;
   });
 };

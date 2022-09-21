@@ -12,7 +12,7 @@
  *           An object of config left to the plugin author to define.
  */
 
-const PauseTracking = function (config) {
+const PauseTracking = function(config) {
   const player = this;
   let pauseTime = 0;
   let pauseCount = 0;
@@ -20,7 +20,7 @@ const PauseTracking = function (config) {
   let timer = null;
   let locked = false;
 
-  const reset = function (e) {
+  const reset = function(e) {
     if (timer) {
       clearTimeout(timer);
     }
@@ -30,32 +30,32 @@ const PauseTracking = function (config) {
     locked = false;
   };
 
-  const isSeeking = function () {
+  const isSeeking = function() {
     return (
-      (typeof player.seeking === "function" && player.seeking()) ||
-      (typeof player.scrubbing === "function" && player.scrubbing())
+      (typeof player.seeking === 'function' && player.seeking()) ||
+      (typeof player.scrubbing === 'function' && player.scrubbing())
     );
   };
 
-  player.on("dispose", reset);
-  player.on("loadstart", reset);
-  player.on("ended", reset);
-  player.on("play", function () {
+  player.on('dispose', reset);
+  player.on('loadstart', reset);
+  player.on('ended', reset);
+  player.on('play', function() {
     if (initPauseTime !== null) {
       pauseTime += (Date.now() - initPauseTime) / 1000;
-      player.trigger("tracking:unpause", { pauseTime, pauseCount });
+      player.trigger('tracking:unpause', {pauseTime, pauseCount});
       initPauseTime = null;
     }
   });
-  player.on("pause", function () {
+  player.on('pause', function() {
     if (isSeeking() || locked) {
       return;
     }
 
-    timer = setTimeout(function () {
+    timer = setTimeout(function() {
       pauseCount++;
       initPauseTime = Date.now();
-      player.trigger("tracking:pause", { pauseTime, pauseCount });
+      player.trigger('tracking:pause', {pauseTime, pauseCount});
     }, 300);
   });
 };
