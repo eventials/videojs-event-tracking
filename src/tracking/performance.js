@@ -33,6 +33,11 @@ const PerformanceTracking = function (config) {
     return;
   }
 
+  let triggerOnPause = true;
+  if (typeof config.triggerOnPause === "boolean") {
+    triggerOnPause = config.triggerOnPause;
+  }
+
   let triggerInterval = 10;
   if (typeof config.triggerInterval === "number") {
     triggerInterval = config.triggerInterval;
@@ -121,6 +126,9 @@ const PerformanceTracking = function (config) {
   });
   player.on("tracking:pause", function (e, data) {
     pauseCount = data.pauseCount;
+    if (triggerOnPause) {
+      trigger();
+    }
   });
   player.on("tracking:unpause", function (e, data) {
     pauseTime = data.pauseTime;
