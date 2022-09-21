@@ -23,14 +23,27 @@
  * @param    {Object} [config={}]
  *           An object of config left to the plugin author to define.
  */
+import { v4 } from 'uuid';
+
 const PerformanceTracking = function(config) {
-  if (typeof config === 'undefined' || typeof config.performance !== 'function') {
+  if (
+    typeof config === 'undefined' ||
+    typeof config.performance !== 'function'
+  ) {
     return;
   }
 
+  const triggerOnPause =
+    typeof config.triggerOnPause === 'boolean' ? config.triggerOnPause : true;
+  const triggerInterval =
+    typeof config.triggerInterval === 'number' ? config.triggerInterval : 10;
+
   const player = this;
+  let session = v4();
   let seekCount = 0;
+  let pauseTime = 0;
   let pauseCount = 0;
+
   let bufferCount = 0;
   let totalDuration = 0;
   let watchedDuration = 0;
@@ -39,18 +52,23 @@ const PerformanceTracking = function(config) {
   let timestamps = [];
 
   const reset = function() {
+    session = v4();
     seekCount = 0;
+    pauseTime = 0;
     pauseCount = 0;
     bufferCount = 0;
+    bufferDuration = 0;
+
+    timestamps = [];
     totalDuration = 0;
     watchedDuration = 0;
-    bufferDuration = 0;
     initialLoadTime = 0;
-    timestamps = [];
   };
 
   const trigger = function() {
     const data = {
+      session,
+      pauseTime,
       pauseCount,
       seekCount,
       bufferCount,
@@ -90,8 +108,12 @@ const PerformanceTracking = function(config) {
 
     if (timestamps.indexOf(curTime) < 0) {
       timestamps.push(curTime);
+      // Update watched duration
+      watchedDuration = timestamps.length;
+      if (watchedDuration % triggerInterval === 0) {
+        trigger();
+      }
     }
-    watchedDuration = timestamps.length;
   });
   player.on('loadeddata', function(e, data) {
     totalDuration = +player.duration().toFixed(0);
@@ -100,6 +122,13 @@ const PerformanceTracking = function(config) {
     seekCount = data.seekCount;
   });
   player.on('tracking:pause', function(e, data) {
+    pauseCount = data.pauseCount;
+    if (triggerOnPause) {
+      trigger();
+    }
+  });
+  player.on('tracking:unpause', function(e, data) {
+    pauseTime = data.pauseTime;
     pauseCount = data.pauseCount;
   });
   player.on('tracking:buffered', function(e, data) {

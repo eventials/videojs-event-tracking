@@ -20,6 +20,7 @@
     "clean": "rimraf dist test/dist",
     "postclean": "mkdirp dist test/dist",
     "lint": "vjsstandard",
+    "lint:fix": "vjsstandard --fix",
     "start": "npm-run-all -p start:server watch",
     "start:server": "static -a 0.0.0.0 -p 9999 -H '{\"Cache-Control\": \"no-cache, must-revalidate\"}' .",
     "pretest": "npm-run-all lint build",
@@ -58,6 +59,7 @@
     "test/"
   ],
   "dependencies": {
+    "uuid": "^9.0.0",
     "video.js": ">=5.20.5"
   },
   "devDependencies": {
